@@ -23,7 +23,6 @@ import argparse
 
 def main():
     get_args()
-    
 
 
 def get_args():
@@ -42,10 +41,11 @@ def get_args():
         const=100.0,
         default=100.0,
     )
-    arguments = ['','',False, 100]
+    arguments = ["", "", False, 100]
     args = parser.parse_args()
     arguments[0] = args.infile
     arguments[1] = args.outfile
-    if args.verbose: arguments[2] = True
+    if args.verbose:
+        arguments[2] = True
     arguments[3] = args.range
     return arguments
