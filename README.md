@@ -21,6 +21,13 @@ DEFAULT: 100|
 |`-s --sigma` | How many standard deviations from the mean data can be. Datapoints outside of this range are removed. This is done before zero mean line normalization so the default value is very high, sigma = 20. |
 |`-V --verbose` | Sets the terminal fillingness of the program |
 
+### Usage and installation
+This program is meant to be used from the command line, although hopefully a GUI will be coming soon... To use the program simply download the src folder, open up a terminal or command prompt window, and run:
+```
+python gemazml.py [INPUT FILEPATH] [OUTPUT FILEPATH] [AXIS] Options
+```
+An executable form is being worked on for Linux and Windows and a graphical frontend is on my list.
+
 ### Contact Info
 
 For any questions or comments please email autumn.bauman@protonmail.com.
