@@ -8,6 +8,7 @@ Added Features:
 Changes:
   - changed return type of `getParameters` to tuple from list.
   - renamed `get_args` to `getParameters`
+  
 No bugs or removed features to be reprted
 
 ### V 0.0.0; January 5 2022
