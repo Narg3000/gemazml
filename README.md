@@ -5,13 +5,17 @@ This program is still in the early days of its life so please let us know of any
 
 Basic usage:
 ```
-python gemazml [INPUT FILEPATH] [OUTPUT FILEPATH] options
+python gemazml [INPUT FILEPATH] [OUTPUT FILEPATH] [AXIS] options
 ```
+`INPUT FILEPATH` is the location of the file to be processed
+`OUTPUT FILEPATH` The file to write output to. NOTE: WILL OVERWRITE EXISTING FILES
+`AXIS` accepts `X` or `Y`. Which direction was the data taken along.
 ### Options
 
 `-v --verbose`    Sets the output of the program
 
-`-r [RANGE] --range [RANGE]`    Sets the data range which is allowed. Values further than this from the mean will be removed from the dataset. DEFAULT: 100
+`-r [RANGE] --range [RANGE]`    Sets the data range which is allowed. Values further than this from the mean will be removed from the dataset after normalization.
+DEFAULT: 100
 
 `-h --help` Displays the help
 
@@ -20,7 +24,7 @@ python gemazml [INPUT FILEPATH] [OUTPUT FILEPATH] options
 For any questions or comments please email autumn.bauman@protonmail.com.
 
 ### That legal stuffs
-Copyright (c) 2022 Autumn Bauman
+Copyright (c) 2022 Autumn Bauman and Michael Rogers
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
