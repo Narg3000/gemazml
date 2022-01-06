@@ -31,7 +31,7 @@ from gridprocessclass import Normalizer
 
 def main():
     # VERSION NUMBER, TAKES STRING VALUE
-    version = "0.0.0"
+    version = "0.0.1"
     # parse command input and store as the tuple args[]
     args = getParameters(version)
     verbose = args[6]
