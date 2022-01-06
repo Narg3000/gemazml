@@ -41,9 +41,11 @@ def getParameters(version):
     )
     # Positonal Arguments
     # input file path
-    parser.add_argument("infile", help="Input file path", type=str)
+    parser.add_argument(
+        "infile", help="Input file path",
+    )
     # output file path
-    parser.add_argument("outfile", help="Output file path", type=str)
+    parser.add_argument("outfile", help="Output file path")
     # Axis along which data was gathered
     parser.add_argument(
         "axis",
@@ -88,7 +90,7 @@ def getParameters(version):
         "-v",
         action="version",
         version=f"gemazml version {version}. \n"
-        + "(c) 2022 Autumn Bauman and CU Denver Physics dept.\n licensed under the Apache 2.0 license",
+        + "(c) 2022 Autumn Bauman and Michael Rogers. \n licensed under the Apache 2.0 license",
     )
 
     args = parser.parse_args()

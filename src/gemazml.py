@@ -41,13 +41,17 @@ def main():
     # args[3] - range
     # args[4] - time
     # args[5] - sigma
-    # args[6] - verbosity, not yet used
+    # args[6] - verbosity
     # args[7] - destagger, not yet implemented
     # -------------------------------------------
     # Initalise Normalizer objects
     totally_tubular = Normalizer(args[0], args[2], args[3])
+    # removes data thats too out there
     totally_tubular.DelOutliers(args[5], verbose)
+    # Normalizes data to a zero mean line
     totally_tubular.ZmlInator()
+    # Remove outliers still present after normalization
+    totally_tubular.limitRange()
     # Write the processed data to file
     totally_tubular.writeout(args[1], verbose)
 

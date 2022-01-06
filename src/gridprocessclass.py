@@ -89,3 +89,20 @@ class Normalizer:
             zml_data[k].drop(["DAT"], axis=1)
             zml_data[k] = zml_data[k][["X", "Y", "ZML", "ROW"]]
         self.dataset = zml_data
+
+    def limitRange(self):
+        normalized = []
+        for k in range(len(self.dataset)):
+            up = (
+                self.dataset[k].ZML.mean() + self.range
+            )  # Takes mean of row and sets bound based around it
+            low = self.dataset[k].ZML.mean() - self.range  # (±range)
+            # moves data that falls within bounds to new array. New name used to allow for retention
+            # of diffrent processes throughout. Might be changed in next revision
+            normalized.append(
+                self.dataset[k][
+                    (self.dataset[k].ZML < up) & (self.dataset[k].ZML > low)
+                ]
+            )
+        # Is this inefficent? Yes. Does it work? Also yes. Will be fixed up later on
+        self.dataset = normalized
