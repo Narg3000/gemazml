@@ -45,7 +45,10 @@ def FileIn(infile):
     csv_processed = csv.reader(csv_working)
     # Header can be discarded
     header = next(csv_processed)
-    del header  # Do some garbage collection, always helpful!
+    try:
+        re.sub("LINE", "DAT", header)
+    except:
+        pass
     # print(csv_working)     Makes sure everything worked
     list_o_data = []  # this will become the list of dataframes
     temp_arr = [
@@ -60,7 +63,9 @@ def FileIn(infile):
         # if prev!= line[3], the rows are diffrent so we save the temp_arr as a dataframe to the final output
         elif prev != line[3]:
             list_o_data.append(
-                pd.DataFrame(temp_arr, columns=["X", "Y", "DAT", "ROW"], dtype=float)
+                pd.DataFrame(temp_arr, columns=header, dtype=float)[
+                    "X", "Y", "DAT", "ROW"
+                ]
             )  # stores as dataframe
             temp_arr = [
                 line  # By redefinign the array it clears all stored values

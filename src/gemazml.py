@@ -43,6 +43,7 @@ def main():
     # args[5] - sigma
     # args[6] - verbosity
     # args[7] - destagger, not yet implemented
+    # args[7] - annoy autumn
     # -------------------------------------------
     # Initalise Normalizer objects
     totally_tubular = Normalizer(args[0], args[2], args[3])
