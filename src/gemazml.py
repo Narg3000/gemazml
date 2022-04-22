@@ -4,7 +4,6 @@ gemazml -- GEophysical MAgnetometry Zero Mean Line data processing software
 This is a program designed to take magnetometer data and remove outliers, normalize
 it to mean of zero, and write the results in a DAT file compatible with surfer.
 
-v 0.0.0
 
 Copyright (c) 2022 Autumn Bauman and Michael Rogers
 
@@ -31,10 +30,12 @@ from gridprocessclass import Normalizer
 
 def main():
     # VERSION NUMBER, TAKES STRING VALUE
-    version = "0.0.1"
+    version = "0.0.2"
     # parse command input and store as the tuple args[]
     args = getParameters(version)
     verbose = args[6]
+    # ---------------------------------------
+    # List of the argument positions
     # args[0] - infile
     # args[1] - outfile
     # args[2] - axis
@@ -47,8 +48,9 @@ def main():
     # -------------------------------------------
     # Initalise Normalizer objects
     totally_tubular = Normalizer(args[0], args[2], args[3])
+    totally_tubular.writeout("initout.dat", verbose)
     # removes data thats too out there
-    totally_tubular.DelOutliers(args[5], verbose)
+    totally_tubular.DelOutliers(verbose)
     # Normalizes data to a zero mean line
     totally_tubular.ZmlInator()
     # Remove outliers still present after normalization
@@ -57,4 +59,6 @@ def main():
     totally_tubular.writeout(args[1], verbose)
 
 
+
+# Calling Main
 main()

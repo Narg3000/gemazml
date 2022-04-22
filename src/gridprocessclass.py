@@ -4,7 +4,7 @@ gemazml -- GEophysical MAgnetometry Zero Mean Line data processing software
 This is a program designed to take magnetometer data and remove outliers, normalize
 it to mean of zero, and write the results in a DAT file compatible with surfer.
 
-v 0.0.0
+
 
 Copyright (c) 2022 Autumn Bauman and Michael Rogers
 
@@ -43,23 +43,17 @@ class Normalizer:
     # Removes outliers in the data. This is a first step and is only to remove
     # data which will interfere with the analysis. Later on there will be a
     # stricter cutoff. The default is 5 standard deviations.
-    def DelOutliers(self, s_margin, verbose):
+    # NEW in v 0.0.2, now  just use the min and max vlaues of the earths B field
+    def DelOutliers(self, verbose):
         for j in range(len(self.dataset) - 1):
-            sigma = s_margin * self.dataset[j]["DAT"].std()
-            upper = self.dataset[j]["DAT"].mean() + sigma
-            lower = self.dataset[j]["DAT"].mean() - sigma
+            upper = 70000
+            lower = 20000
             self.dataset[j] = self.dataset[j][
                 (self.dataset[j]["DAT"] > lower) & (self.dataset[j]["DAT"] < upper)
             ]
 
             if verbose:
-                print(
-                    self.dataset[j][
-                        (self.dataset[j]["DAT"] < lower)
-                        | (self.dataset[j]["DAT"] > upper)
-                    ]
-                )
-            # print(self.dataset[j])
+                print(self.dataset[j])
 
     def writeout(self, outpath, verbose):
         fileio.FileOut(outpath, self.dataset, verbose)

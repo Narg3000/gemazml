@@ -4,7 +4,7 @@ gemazml -- GEophysical MAgnetometry Zero Mean Line data processing software
 This is a program designed to take magnetometer data and remove outliers, normalize
 it to mean of zero, and write the results in a DAT file compatible with surfer.
 
-v 0.0.0
+
 
 Copyright (c) 2022 Autumn Bauman and Michael Rogers
 

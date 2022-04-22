@@ -25,7 +25,6 @@ Module for reading and writing files
 # Imports!
 import pandas as pd
 import csv
-import regex as re
 
 
 # Read in function, returns a list of dataframes.
@@ -34,46 +33,21 @@ import regex as re
 def FileIn(infile):
     if type(infile) != str:
         raise Exception("infile must be of type string")
-    with open(infile, "r") as file:
-        data = file.read()  # Reads data in as string
-    #  print(data)
-    data = re.sub("[^\S\n\r]+", ",", data)  # Some regular expression to turn it into
-    data = re.sub("\n,", "\n", data)  # standard csv formatted string
-    csv_working = data.split("\n")
-    # Now we need to turn the data into a list because reasons (specifically
-    # because the csv librairy needs lists to work right)
-    csv_processed = csv.reader(csv_working)
-    # Header can be discarded
-    header = next(csv_processed)
-    try:
-        re.sub("LINE", "DAT", header)
-    except:
-        pass
-    # print(csv_working)     Makes sure everything worked
-    list_o_data = []  # this will become the list of dataframes
-    temp_arr = [
-        next(csv_processed)
-    ]  # empty list used for slicing up the data. Inital value of first row
-    prev = temp_arr[0][3]  # inital value for row number
-    for line in csv_processed:  # Itterates over the csv file
-        if line == []:
-            pass  # For some reason the csv terminates with nul list, I
-        #           just check if it exists and ignore
-        # line[3] is index where row is stored, we organise data by row.
-        # if prev!= line[3], the rows are diffrent so we save the temp_arr as a dataframe to the final output
-        elif prev != line[3]:
-            list_o_data.append(
-                pd.DataFrame(temp_arr, columns=header, dtype=float)[
-                    "X", "Y", "DAT", "ROW"
-                ]
-            )  # stores as dataframe
-            temp_arr = [
-                line  # By redefinign the array it clears all stored values
-            ]  # and starts over. stores new row
-            prev = line[3]  # redefine prev
-        else:  # if not new row, just adds data to current row
-            temp_arr.append(line)
 
+    data = pd.read_fwf(infile)  # Read in the data
+    data.X = pd.to_numeric(data.X, errors="coerce")  # Turn things into numvers
+    data.Y = pd.to_numeric(data.Y, errors="coerce")
+    data.READING = pd.to_numeric(data.READING, errors="coerce")
+    data.LINE = pd.to_numeric(data.LINE, errors="coerce")
+    data = (
+        data[["X", "Y", "READING", "LINE"]]
+        .dropna()
+        .rename(columns={"READING": "DAT", "LINE": "ROW"})
+    )  # Clear out NaN values
+    list_o_data = []
+
+    for i in range(int(data["ROW"].max()) + 1):
+        list_o_data.append(data[data.ROW == i])
     return list_o_data
 
 
