@@ -33,12 +33,12 @@ import csv
 def FileIn(infile):
     if type(infile) != str:
         raise Exception("infile must be of type string")
-
+    print(infile)
     data = pd.read_fwf(infile)  # Read in the data
-    data.X = pd.to_numeric(data.X, errors="coerce")  # Turn things into numvers
-    data.Y = pd.to_numeric(data.Y, errors="coerce")
-    data.READING = pd.to_numeric(data.READING, errors="coerce")
-    data.LINE = pd.to_numeric(data.LINE, errors="coerce")
+    data.X = pd.to_numeric(data['X'], errors="coerce")  # Turn things into numvers
+    data.Y = pd.to_numeric(data['Y'], errors="coerce")
+    data.READING = pd.to_numeric(data['READING'], errors="coerce")
+    data.LINE = pd.to_numeric(data['LINE'], errors="coerce")
     data = (
         data[["X", "Y", "READING", "LINE"]]
         .dropna()
@@ -54,24 +54,55 @@ def FileIn(infile):
 # Function to write out the data to a new file. Non returning function
 # Takes argument "outpath", location of file to write.
 def FileOut(outpath, final_dat, verbose):
+    # Some now redundant checks but better safe than sorry
     if type(outpath) != str:
         raise Exception(f"outpath must be of type string but is type {type(outpath)}")
-    with open(outpath, "w") as file:  # creates the file and puts in the header
-        file.write("X Y READING LINE \n")
+
+    # creates the file and puts in the header
+    with open(outpath, "w") as file:
+        file.write("           X           Y     READING        LINE\n")
     if verbose:
-        print("Header Written")
+        print(f"Header Written to {outpath}")
+
 
     for df in final_dat:  # itterates over the array
         df["ROW"] = df.astype(
             {"ROW": int}
         )  # Converts the row from float64 to int64, needed for file output
         """
-        Using pandas standard csv method to write out the data. Headers and indexes are turned off
-        and the seperator character has been turned into a tab instead of comma. Somthing to note
-        is that I open the file in append mode so that the dataframes are consecutively written to the
-        bottom of the csv.
+        In order to get this working as a fixed width file I am using the inbuilt df.to_string method with
+        formatting specified. Somthing to note with this is that regarless of the formatting specified pandas
+        goes and adds a space after every collumn excpet the last so in order to get 12 wide columns you actually
+        have to start counting from zero on all columns after the first, hence the 12, 11, 11, 11 notation. 
         """
+        with open(outpath, "a") as file:
+            file.write(df.to_string(col_space = 11, header = False, index = False, max_colwidth=13,
+            formatters={
+                'X': "{:>12.3f}".format,
+                'Y': "{:>11.3f}".format,
+                'READING': "{:>11.3f}".format,
+                'LINE': "{:>11.d}".format}
+                ) + '\n')
 
-        df.to_csv(outpath, sep="\t", header=False, index=False, mode="a")
+# Basically a copy of the above but it uses magical elves to write file headers. Or somthing 
+def CatOut(outpath, final_dat, newfile, verbose):
+    if type(outpath) != str:
+        raise Exception(f"outpath must be of type string but is type {type(outpath)}")
+    # If we are creating a new file we must write the header!
+    if newfile: 
+        with open(outpath, "w") as file:  # creates the file and puts in the header
+            file.write("           X           Y     READING        LINE\n")
         if verbose:
-            print("printed a line!")
+            print("Header Written")
+
+    for df in final_dat:  # itterates over the array
+        df["ROW"] = df.astype({"ROW": int})  # Converts the row from float64 to int64, needed for file output
+        # See comment in FileOut() for explenation. 
+        with open(outpath, "a") as file:
+            file.write(df.to_string(col_space = 11, header = False, index = False, max_colwidth=13,
+            formatters={
+                'X': "{:>12.3f}".format,
+                'Y': "{:>11.3f}".format,
+                'READING': "{:>11.3f}".format,
+                'LINE': "{:>11.d}".format}
+                ) + '\n')

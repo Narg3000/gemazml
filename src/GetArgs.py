@@ -31,30 +31,15 @@ datatypes:  |str  | str   | str | float | bool| int  | bool   |
 # Argparse used to take input
 import argparse
 
-# Function to deal with user input
+
 def getParameters(version):
     # set up the parameters
     parser = argparse.ArgumentParser(
         prog="gemazml",
         description="Processes magnetometry data to remove dropouts and normalize to a zero mean line",
-        usage="gemazml [INFILE] [OUTFILE] [AXIS] [options]",
-    )
-    # Positonal Arguments
-    # input file path
-    parser.add_argument(
-        "infile", help="Input file path",
-    )
-    # output file path
-    parser.add_argument("outfile", help="Output file path")
-    # Axis along which data was gathered
-    parser.add_argument(
-        "axis",
-        help="Axis data was gathered along. Accepts X or Y",
-        type=str,
-        choices=["X", "Y"],
     )
     # Optional Arguments!
-    # Verbosity, not yet implemented
+    # Verbosity, not yet implemented well. If you use it rip stdout ig
     parser.add_argument(
         "-V", "--verbose", help="verbose output from program", action="store_true"
     )
@@ -77,13 +62,13 @@ def getParameters(version):
     # multiple of sstandard deviations used to remove data outliers
     # in preprocessing
     parser.add_argument(
-        "-S",
-        "--sigma",
-        type=int,
-        help="Specify standard deviations from mean to remove data outliers in preprocessing. Default 20",
+        "--destagger",
+        help="Add an offset to every other scan row. Off by default",
+        type=float,
         nargs="?",
-        default=20,
+        default=0
     )
+    
     # Display version and copyright stuffs
     parser.add_argument(
         "--version",
@@ -93,14 +78,48 @@ def getParameters(version):
         + "(c) 2022 Autumn Bauman and Michael Rogers. \n licensed under the Apache 2.0 license",
     )
 
+    subparsers = parser.add_subparsers(dest="mode")
+    ####################################################################
+    # FILE SECTION
+    fileParse = subparsers.add_parser('file', help='Used for a single file')
+
+    # Parser for file mode 
+
+    fileParse.add_argument(
+        "infile", help="Input file path",
+        type=str
+    )
+    # Output File
+    fileParse.add_argument("outfile", help="Output File Path", type=str)
+    fileParse.add_argument(
+        "axis", help="Axis along which data was gathered along",
+        type=str,
+        choices=['X', 'Y']
+    )
+    #######################################################################
+    # Directory Section 
+    # Parser for directories
+    dirParser = subparsers.add_parser('dir', help="Used for directories of data")
+
+    dirParser.add_argument(
+        "infile", help="Input file path", type=str)
+    dirParser.add_argument(
+        "outfile", help="Directory to write to", type=str)
+    dirParser.add_argument(
+        "axis", help="Axis along which data was gathered along",
+        type=str,
+        choices=['X', 'Y']
+    )
+    # Turn input files into one big one on the output
+    dirParser.add_argument("--append", help="append all files into single .dat. Default, false", action='store_true', default=False)
+    # What extension to look for on the files 
+    dirParser.add_argument("-e", "--extension", help="Extension on files. Default is '.dat'", type=str, default='.dat')
+
+
+
+    
+
     args = parser.parse_args()
     # tuple to be returned
-    return (
-        args.infile,
-        args.outfile,
-        args.axis,
-        args.range,
-        args.time,
-        args.sigma,
-        args.verbose,
-    )
+    return args
+       
