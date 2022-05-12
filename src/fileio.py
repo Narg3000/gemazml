@@ -25,7 +25,6 @@ Module for reading and writing files
 # Imports!
 import pandas as pd
 import csv
-import regex as re
 
 
 # Read in function, returns a list of dataframes.
@@ -34,65 +33,76 @@ import regex as re
 def FileIn(infile):
     if type(infile) != str:
         raise Exception("infile must be of type string")
-    with open(infile, "r") as file:
-        data = file.read()  # Reads data in as string
-    #  print(data)
-    data = re.sub("[^\S\n\r]+", ",", data)  # Some regular expression to turn it into
-    data = re.sub("\n,", "\n", data)  # standard csv formatted string
-    csv_working = data.split("\n")
-    # Now we need to turn the data into a list because reasons (specifically
-    # because the csv librairy needs lists to work right)
-    csv_processed = csv.reader(csv_working)
-    # Header can be discarded
-    header = next(csv_processed)
-    del header  # Do some garbage collection, always helpful!
-    # print(csv_working)     Makes sure everything worked
-    list_o_data = []  # this will become the list of dataframes
-    temp_arr = [
-        next(csv_processed)
-    ]  # empty list used for slicing up the data. Inital value of first row
-    prev = temp_arr[0][3]  # inital value for row number
-    for line in csv_processed:  # Itterates over the csv file
-        if line == []:
-            pass  # For some reason the csv terminates with nul list, I
-        #           just check if it exists and ignore
-        # line[3] is index where row is stored, we organise data by row.
-        # if prev!= line[3], the rows are diffrent so we save the temp_arr as a dataframe to the final output
-        elif prev != line[3]:
-            list_o_data.append(
-                pd.DataFrame(temp_arr, columns=["X", "Y", "DAT", "ROW"], dtype=float)
-            )  # stores as dataframe
-            temp_arr = [
-                line  # By redefinign the array it clears all stored values
-            ]  # and starts over. stores new row
-            prev = line[3]  # redefine prev
-        else:  # if not new row, just adds data to current row
-            temp_arr.append(line)
+    print(infile)
+    data = pd.read_fwf(infile)  # Read in the data
+    data.X = pd.to_numeric(data['X'], errors="coerce")  # Turn things into numvers
+    data.Y = pd.to_numeric(data['Y'], errors="coerce")
+    data.READING = pd.to_numeric(data['READING'], errors="coerce")
+    data.LINE = pd.to_numeric(data['LINE'], errors="coerce")
+    data = (
+        data[["X", "Y", "READING", "LINE"]]
+        .dropna()
+        .rename(columns={"READING": "DAT", "LINE": "ROW"})
+    )  # Clear out NaN values
+    list_o_data = []
 
+    for i in range(int(data["ROW"].max()) + 1):
+        list_o_data.append(data[data.ROW == i])
     return list_o_data
 
 
 # Function to write out the data to a new file. Non returning function
 # Takes argument "outpath", location of file to write.
 def FileOut(outpath, final_dat, verbose):
+    # Some now redundant checks but better safe than sorry
     if type(outpath) != str:
         raise Exception(f"outpath must be of type string but is type {type(outpath)}")
-    with open(outpath, "w") as file:  # creates the file and puts in the header
-        file.write("X Y READING LINE \n")
+
+    # creates the file and puts in the header
+    with open(outpath, "w") as file:
+        file.write("           X           Y     READING        LINE\n")
     if verbose:
-        print("Header Written")
+        print(f"Header Written to {outpath}")
+
 
     for df in final_dat:  # itterates over the array
         df["ROW"] = df.astype(
             {"ROW": int}
         )  # Converts the row from float64 to int64, needed for file output
         """
-        Using pandas standard csv method to write out the data. Headers and indexes are turned off
-        and the seperator character has been turned into a tab instead of comma. Somthing to note
-        is that I open the file in append mode so that the dataframes are consecutively written to the
-        bottom of the csv.
+        In order to get this working as a fixed width file I am using the inbuilt df.to_string method with
+        formatting specified. Somthing to note with this is that regarless of the formatting specified pandas
+        goes and adds a space after every collumn excpet the last so in order to get 12 wide columns you actually
+        have to start counting from zero on all columns after the first, hence the 12, 11, 11, 11 notation. 
         """
+        with open(outpath, "a") as file:
+            file.write(df.to_string(col_space = 11, header = False, index = False, max_colwidth=13,
+            formatters={
+                'X': "{:>12.3f}".format,
+                'Y': "{:>11.3f}".format,
+                'READING': "{:>11.3f}".format,
+                'LINE': "{:>11.d}".format}
+                ) + '\n')
 
-        df.to_csv(outpath, sep="\t", header=False, index=False, mode="a")
+# Basically a copy of the above but it uses magical elves to write file headers. Or somthing 
+def CatOut(outpath, final_dat, newfile, verbose):
+    if type(outpath) != str:
+        raise Exception(f"outpath must be of type string but is type {type(outpath)}")
+    # If we are creating a new file we must write the header!
+    if newfile: 
+        with open(outpath, "w") as file:  # creates the file and puts in the header
+            file.write("           X           Y     READING        LINE\n")
         if verbose:
-            print("printed a line!")
+            print("Header Written")
+
+    for df in final_dat:  # itterates over the array
+        df["ROW"] = df.astype({"ROW": int})  # Converts the row from float64 to int64, needed for file output
+        # See comment in FileOut() for explenation. 
+        with open(outpath, "a") as file:
+            file.write(df.to_string(col_space = 11, header = False, index = False, max_colwidth=13,
+            formatters={
+                'X': "{:>12.3f}".format,
+                'Y': "{:>11.3f}".format,
+                'READING': "{:>11.3f}".format,
+                'LINE': "{:>11.d}".format}
+                ) + '\n')

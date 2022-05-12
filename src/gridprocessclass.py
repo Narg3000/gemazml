@@ -4,7 +4,7 @@ gemazml -- GEophysical MAgnetometry Zero Mean Line data processing software
 This is a program designed to take magnetometer data and remove outliers, normalize
 it to mean of zero, and write the results in a DAT file compatible with surfer.
 
-v 0.0.0
+
 
 Copyright (c) 2022 Autumn Bauman and Michael Rogers
 
@@ -35,6 +35,7 @@ from sklearn.linear_model import LinearRegression
 class Normalizer:
     def __init__(self, infile, axis, range):
         self.dataset = fileio.FileIn(infile)
+        self.infile = infile
         # Which axis was moved along while gathering data
         self.axis = axis
         # Rangeis used when removing outliers later on
@@ -43,26 +44,14 @@ class Normalizer:
     # Removes outliers in the data. This is a first step and is only to remove
     # data which will interfere with the analysis. Later on there will be a
     # stricter cutoff. The default is 5 standard deviations.
-    def DelOutliers(self, s_margin, verbose):
+    # NEW in v 0.0.2, now  just use the min and max vlaues of the earths B field
+    def DelOutliers(self, verbose):
         for j in range(len(self.dataset) - 1):
-            sigma = s_margin * self.dataset[j]["DAT"].std()
-            upper = self.dataset[j]["DAT"].mean() + sigma
-            lower = self.dataset[j]["DAT"].mean() - sigma
+            upper = 70000
+            lower = 20000
             self.dataset[j] = self.dataset[j][
                 (self.dataset[j]["DAT"] > lower) & (self.dataset[j]["DAT"] < upper)
             ]
-
-            if verbose:
-                print(
-                    self.dataset[j][
-                        (self.dataset[j]["DAT"] < lower)
-                        | (self.dataset[j]["DAT"] > upper)
-                    ]
-                )
-            # print(self.dataset[j])
-
-    def writeout(self, outpath, verbose):
-        fileio.FileOut(outpath, self.dataset, verbose)
 
     # Function to take in values from linear regression and a data point then
     # subtracts the value of the trendine at x from dat, returning a float.
@@ -73,6 +62,9 @@ class Normalizer:
         return round(float(dat), 3)
 
     # This goes and normalizes to the zero mean line
+
+    # IMPORTANT NOTE: THIS DELETES THE DAT COLUMN AND REPLACES IT WITH ZML. THE CODE BELOW THIS MUST 
+    # BE EITHER REWRITTEN OR ONLY BE RAN IN A CERTAIN ORDER. THE CHOICE IS YOURS!
     def ZmlInator(self):
         zml_data = []
         for k in range(len(self.dataset) - 1):
@@ -83,13 +75,27 @@ class Normalizer:
             zml_data.append(self.dataset[k].copy())
             m, b = lin_line.coef_, lin_line.intercept_  # Get coefficents and intercept
             # goes through array and runs the ZML function on every row, storing the results in the copy, zml data
-            zml_data[k]["ZML"] = self.dataset[k].apply(
-                lambda func: self.__ZML__(m, func[self.axis], b, func["DAT"]), axis=1
-            )
+            zml_data[k]["ZML"] = self.dataset[k].apply(lambda func: self.__ZML__(m, func[self.axis], b, func["DAT"]), axis=1)
             zml_data[k].drop(["DAT"], axis=1)
-            zml_data[k] = zml_data[k][["X", "Y", "ZML", "ROW"]]
+            zml_data[k] = (zml_data[k][["X", "Y", "ZML", "ROW"]])
+
         self.dataset = zml_data
 
+    # Function to destagger the data, taking a small offset and shifting the axis values slightly.
+    # This operates by adding to the odd columns and subtracting from the even. This avoids issues with the 
+    # duplictae rows which are not stored next to oneanother. 
+    def destaggerer(self, ammount, verbose):
+        if type(ammount) != float: raise Exception("Input must be float!")
+        if verbose: print(f"destaggering data from file {self.infile} by +/- {ammount}")
+
+        for i in range(len(self.dataset) - 1):
+            if (self.dataset[i].iloc[0]['ROW'] % 2):
+                self.dataset[i][self.axis] = self.dataset[i][self.axis] + ammount
+            else:
+                self.dataset[i][self.axis] = self.dataset[i][self.axis] - ammount
+    
+    # Function to cut out slightly anamolous data. Less useful with the well designed DelOutliers method
+    # but still can be helpful
     def limitRange(self):
         normalized = []
         for k in range(len(self.dataset)):
@@ -106,3 +112,8 @@ class Normalizer:
             )
         # Is this inefficent? Yes. Does it work? Also yes. Will be fixed up later on
         self.dataset = normalized
+    def writeout(self, outpath, verbose):
+        fileio.FileOut(outpath, self.dataset, verbose)
+
+    def concatOut(self, outpath, verbose, is_append):
+        fileio.CatOut(outpath, self.dataset, is_append, verbose)
